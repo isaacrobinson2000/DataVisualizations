@@ -1,0 +1,102 @@
+html {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    position: absolute;
+    margin: 0;
+    padding: 1em;
+    box-sizing: border-box;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+}
+
+.left_side {
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.right_side {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+}
+
+.top_charts, .bottom_charts {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.bottom_charts {
+    display: flex;
+    flex-direction: row;
+}
+
+#figure1, #figure2 {
+    width: 50%;
+}
+
+.figure {
+    flex-grow: 1;
+}
+
+.chart {
+    width: 100%;
+    height: auto;
+}
+
+#sources {
+    text-align: center;
+    font-size: smaller;
+}
+
+#title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: sans-serif;
+    padding: 0.25em;
+    margin: 0 0 0.5em 0;
+}
+
+.tooltip {
+    background-color: rgba(235, 235, 235, 0.8);
+    position: fixed;
+    display: none;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    border-radius: 0.5em;
+    padding: 0.5em;
+}
+
+p {
+    text-indent: 5ch;
+}
+
+.text-desc {
+    font-family: sans-serif;
+    font-size:  15px;
+    padding: 5px;
+}
+
+.main-image {
+    width: 100%
+}
