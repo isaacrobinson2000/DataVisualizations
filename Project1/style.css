@@ -21,6 +21,7 @@ body {
 .content {
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
 }
 
 .left_side {
@@ -65,12 +66,12 @@ body {
 
 #sources {
     text-align: center;
-    font-size: smaller;
+    font-size: 0.8vw;
 }
 
 #title {
     text-align: center;
-    font-size: 24px;
+    font-size: 1.75vw;
     font-weight: bold;
     font-family: sans-serif;
     padding: 0.25em;
@@ -93,8 +94,9 @@ p {
 
 .text-desc {
     font-family: sans-serif;
-    font-size:  15px;
-    padding: 5px;
+    padding: 0.2em;
+    margin: 0;
+    font-size: 1vw;
 }
 
 .main-image {
