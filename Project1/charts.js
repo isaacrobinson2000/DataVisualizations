@@ -458,8 +458,6 @@ function updateHistogramPlot(
     let mousemove = (year) => function (evt, d) {
         let bounds = this.getBoundingClientRect();
 
-        console.log(bounds);
-
         tooltip.html("Group: " + d.group + "<br>Percent of Total: " + Math.round(d[year] * 100) / 100 + "%")
             .style("left", (bounds.left + bounds.right) / 2 + "px")
             .style("top", bounds.top - 5 + "px");
