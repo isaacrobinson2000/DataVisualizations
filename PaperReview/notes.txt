@@ -1,0 +1,52 @@
+1.) Avoid too little contrast to the background.
+
+ - Can be hard to read and distingush.
+ - Can happen if your colors are too desaturated/light.
+
+ - How to fix:
+   - Increase the saturation, or make the colors darker.
+
+2.) Avoid too much contrast with the backround.
+
+ - Decrease saturation/darkness to fix.
+
+3.) Choose a background that’s desaturated enough.
+
+ - Colorful backgrounds can distract from the figure and data.
+ - Should go with desaturated backgrounds.
+
+ - If you want a light background, stay away from colors 
+   below 95% lightness and above 7% saturation.
+
+ - If you want a dark background, stay below 20% saturation. 
+   Also, don’t go full black – keep your lightness between 10% 
+   and 25%.
+
+4.) Copy colors, or understand them.
+
+ - I do this quite a bit myself.
+ - Its ok to be bad with colors, just copy colors schemes from things you like.
+    - Whether that's good:
+       - Data Visualizations
+       - Movies, Artists, other color palletes or colormaps.
+
+    - Many of these people have spent of time studying and selecting colors.
+
+ - Use tools to help you pick color schemes.
+ - Many plotting tools come with very carefully selected colormaps.
+
+
+QUESTIONS:
+
+1.) It can be seen that some colors evoke certain emotions or
+   have certain connontations tied to them. Do you
+   think that this can be taken advantage of in data 
+   visualizations, and how so?
+
+2.) Where else do you think one can find good colormaps, or find
+   insparation for good colormaps, other then the resources 
+   listed in the last section? Have you found any tools 
+   you like to use for generating colormaps?
+
+EXAMPLE: https://twitter.com/kevinsblake/status/1430165974662193159?s=09
+EXAMPLE: https://pokepalettes.com/
