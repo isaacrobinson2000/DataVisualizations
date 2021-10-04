@@ -11,9 +11,39 @@
 <h1 id="title">Do Rats Prefer Inspecting Objects That Look Like Them?</h1>
 <div class="content">
     <div class="description"></div>
-    <div id="figure1"></div>
-    <div id="figure2"></div>
-    <div id="figure3"></div>
+    <div id="figure1">
+        <div class="hover_info" id="figure1_hover"></div>
+    </div>
+    <div id="figure2">
+        <div class="hover_info" id="figure2_hover"></div>
+    </div>
+    <div id="controls">
+        <label for="rat_select">Rat: </label>
+        <select name="rat" id="rat_select">
+            <option value="rat1" selected>Rat 1</option>
+            <option value="rat2">Rat 2</option>
+            <option value="rat3">Rat 3</option>
+            <option value="rat4">Rat 4</option>
+            <option value="rat5">Rat 5</option>
+            <option value="rat6">Rat 6</option>
+        </select>
+
+        <label for="colormap_select">Colormap: </label>
+        <select name="colormap" id="colormap_select">
+            <!-- Filled out by JS -->
+        </select>
+
+        <label for="reverse_colormap">Reverse Colormap: </label>
+        <input name="reverse_colormap" id="reverse_colormap" type="checkbox">
+
+        <label for="bucket_size">Grid Size: </label>
+        <input name="bucket_size" id="bucket_size" type="range" min="8" max="50" step="1" value="30">
+        <span id="bucket_size_val">30</span><span>px</span>
+
+        <label for="num_colors">Color Steps: </label>
+        <input name="num_colors" id="num_colors" type="range" min="4" max="20" step="1" value="12">
+        <span id="num_colors_val">12</span>
+    </div>
 </div>
 </body>
 </html>

@@ -1,0 +1,12 @@
+
+
+.hover_info {
+    display: none;
+    position: fixed;
+    background-color: rgba(230, 230, 230, 0.6);
+    border-radius: 0.25em;
+    color: black;
+    opacity: 0;
+    transform: translate(-50%, -2em);
+    padding: 0.5em;
+}

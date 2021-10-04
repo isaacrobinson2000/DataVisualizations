@@ -7,28 +7,34 @@ let MARGINS = {top: 25, right: 65, bottom: 40, left: 50};
 let VIDEO_SIZE = {"width": 640, "height": 480};
 let VIDEO_FPS = 15;
 
-let COLORS = [
-    'rgb(57, 59, 121)',
-    'rgb(82, 84, 163)',
-    'rgb(107, 110, 207)',
-    'rgb(156, 158, 222)',
-    /*'rgb(99, 121, 57)',
-    'rgb(140, 162, 82)',
-    'rgb(181, 207, 107)',
-    'rgb(206, 219, 156)',*/
-    'rgb(140, 109, 49)',
-    'rgb(189, 158, 57)',
-    'rgb(231, 186, 82)',
-    'rgb(231, 203, 148)',
-    'rgb(132, 60, 57)',
-    'rgb(173, 73, 74)',
-    'rgb(214, 97, 107)',
-    'rgb(231, 150, 156)',
-    /*'rgb(123, 65, 115)',
-    'rgb(165, 81, 148)',*/
-    'rgb(206, 109, 189)',
-    'rgb(222, 158, 214)'
+let COLORMAPS = [
+    "Inferno",
+    "Magma",
+    "Plasma",
+    "Warm",
+    "Cool",
+    "CubehelixDefault",
+    "BuGn",
+    "BuPu",
+    "GnBu",
+    "OrRd",
+    "PuBuGn",
+    "PuBu",
+    "PuRd",
+    "RdPu",
+    "YlGnBu",
+    "YlGn",
+    "YlOrBr",
+    "YlOrRd",
+    "Blues",
+    "Greens",
+    "Greys",
+    "Oranges",
+    "Purples",
+    "Reds"
 ]
+
+let COLORMAP_DEFAULT = "Plasma";
 
 function buildMapper(data, attrs, colors) {
     let [min, max] = numericDomain([data], [attrs]);
@@ -221,7 +227,6 @@ function makePlotArea(selector, plotInfo) {
         inset = (legendLocation.leftSide)? inset: (legendLocation.insidePlot)? width - inset: fullWidth - inset;
 
         let anchorSide = legendLocation.leftSide? "start": "end";
-        console.log(anchorSide);
 
         for(let i = 0; i < legendNames.length; i++) {
             legend.append("circle")
@@ -307,18 +312,23 @@ function toBins(data, binSize, indexes = DEF_INDEXES, videoDim = VIDEO_SIZE) {
 
     for(let row of data) {
         if(
-            (row[indexes.likelihood] < FILTER_THRESHOLD)
+            ((+row[indexes.likelihood]) < FILTER_THRESHOLD)
             || (+row[indexes.x] > videoDim.width)
+            || (+row[indexes.x] < 0)
             || (+row[indexes.y] > videoDim.height)
+            || (+row[indexes.y] < 0)
         ) {
-            console.log("no good...");
             continue;
         }
 
         let xLoc = Math.floor(row[indexes.x] / binSize);
         let yLoc = Math.floor(row[indexes.y] / binSize);
 
-        bins[xLoc * binHeight + yLoc].count += 1;
+        try {
+            bins[xLoc * binHeight + yLoc].count += 1;
+        } catch(e) {
+            console.log(xLoc, yLoc, row[indexes.likelihood], bins[xLoc * binHeight + yLoc])
+        }
     }
 
     return {
@@ -329,13 +339,50 @@ function toBins(data, binSize, indexes = DEF_INDEXES, videoDim = VIDEO_SIZE) {
     }
 }
 
+function setupHover(selector, rects) {
+    let tooltip = d3.select(selector);
+
+    // Create hover functions...
+    let mouseon = (evt, d) => {
+        d3.select(evt.target).attr("stroke", "white").attr("stroke_width", "3px");
+        tooltip.style("opacity", 1).style("display", "block");
+    }
+
+    let mousemove = (evt, d) => {
+        let bbox = tooltip.html(
+            "Time Spent: " + Math.round((d.count / VIDEO_FPS) * 100) / 100 + "s"
+        ).node().getBoundingClientRect();
+
+        tooltip
+            .style("left", evt.clientX + "px")
+            .style("top", (evt.clientY - 10) + "px");
+    }
+
+    let mouseoff = (evt, d) => {
+        tooltip.style("opacity", 0).style("display", "none");
+        d3.select(evt.target).attr("stroke", "none");
+    }
+
+    // Attach the events...
+    rects.on("mouseover", mouseon).on("mousemove", mousemove).on("mouseleave", mouseoff);
+}
+
+function transformColormapFunc(colorFunc, scale) {
+    return (v) => {
+        return colorFunc(scale(v));
+    }
+}
+
 function updatePlots(
     data_name,
     selector1,
     selector2,
     title,
     binSize,
-    colorSegments = 10
+    colorSegments,
+    colormapFunc = transformColormapFunc(d3.interpolateCubehelixDefault, d3.scaleLinear().domain([0, 1]).range([0.3, 1])),
+    overlayOpacity = 0.5,
+    underlayOpacity = 0.5
 ) {
     Promise.all([
         d3.csv("data/" + data_name + "control.cleancsv"), d3.csv("data/" + data_name + "so.cleancsv")
@@ -345,7 +392,7 @@ function updatePlots(
         control = toBins(control, binSize, {"x": "Nose_x", "y": "Nose_y", "likelihood": "Nose_likelihood"});
         so = toBins(so, binSize, {"x": "Nose_x", "y": "Nose_y", "likelihood": "Nose_likelihood"});
 
-        let colors = d3.range(colorSegments).map((d) => d3.interpolatePlasma(d / colorSegments));
+        let colors = d3.range(colorSegments).map((d) => colormapFunc(d / colorSegments));
         let controlColorMapper = buildMapper(control.bins, "count", colors);
         let soColorMapper = buildMapper(so.bins, "count", colors);
 
@@ -379,10 +426,11 @@ function updatePlots(
             .attr("width", controlPlot.xProj(VIDEO_SIZE.width))
             .attr("height", controlPlot.yProj(VIDEO_SIZE.height))
             .attr("image-rendering", "optimizeSpeed")
-            .attr("preserveAspectRatio", "none");
+            .attr("preserveAspectRatio", "none")
+            .attr("opacity", underlayOpacity);
 
         // Plot the bins!
-        controlPlot.plotArea
+        let controlRects = controlPlot.plotArea
             .selectAll("bins")
             .data(control.bins)
             .enter()
@@ -402,7 +450,9 @@ function updatePlots(
                 );
             })
             .attr("fill", (d) => controlColorMapper(d.count))
-            .attr("opacity", 0.6);
+            .attr("opacity", overlayOpacity);
+
+        setupHover(selector1 + "_hover", controlRects);
 
         let soPlot = makePlotArea(selector2, {
             yScaler: d3.scaleLinear,
@@ -431,10 +481,11 @@ function updatePlots(
             .attr("width", controlPlot.xProj(VIDEO_SIZE.width))
             .attr("height", controlPlot.yProj(VIDEO_SIZE.height))
             .attr("image-rendering", "optimizeSpeed")
-            .attr("preserveAspectRatio", "none");
+            .attr("preserveAspectRatio", "none")
+            .attr("opacity", underlayOpacity);
 
         // Plot the bins!
-        soPlot.plotArea
+        let soRects = soPlot.plotArea
             .selectAll("bins")
             .data(so.bins)
             .enter()
@@ -454,12 +505,58 @@ function updatePlots(
                 );
             })
             .attr("fill", (d) => soColorMapper(d.count))
-            .attr("opacity", 0.6);
+            .attr("opacity", overlayOpacity);
+
+        setupHover(selector2 + "_hover", soRects);
     })
 }
 
+function onSettingChange(evt) {
+    let binSize = d3.select("#bucket_size").node().value;
+    let ratExp = d3.select("#rat_select").node().value;
+    let colorCount = d3.select("#num_colors").node().value;
+    let colormap = d3.select("#colormap_select").node().value;
+    let reverseCmap = d3.select("#reverse_colormap").node().checked;
+
+    let rangeArr = reverseCmap? [1, 0]: [0, 1];
+
+    updatePlots(
+        ratExp,
+        "#figure1",
+        "#figure2",
+        "Rat " + ratExp[ratExp.length - 1],
+        binSize,
+        colorCount,
+        transformColormapFunc(d3["interpolate" + colormap], d3.scaleLinear().domain([0, 1]).range(rangeArr))
+    );
+}
+
+function sliderEvt(selector) {
+    return (evt) => {
+        let val = d3.select(selector).node().value;
+        d3.select(selector + "_val").text(val);
+
+        onSettingChange(evt);
+    }
+}
+
 function makePlots() {
-    updatePlots("rat1", "#figure1", "#figure2", "Rat 1 ", 25);
+    d3.select("#colormap_select")
+        .selectAll("colormaps")
+        .data(COLORMAPS)
+        .enter()
+        .append("option")
+        .attr("value", (d) => d)
+        .text((d) => d);
+
+    d3.select("#colormap_select").on("input", onSettingChange);
+    d3.select("#bucket_size").on("input", sliderEvt("#bucket_size"));
+    d3.select("#rat_select").on("input", onSettingChange);
+    d3.select("#num_colors").on("input", sliderEvt("#num_colors"));
+    d3.select("#reverse_colormap").on("input", onSettingChange);
+
+    // Initialize...
+    onSettingChange(null);
 }
 
 
