@@ -34,7 +34,7 @@ let COLORMAPS = [
     "Reds"
 ]
 
-let COLORMAP_DEFAULT = "Cool";
+let COLORMAP_DEFAULT = "YlGnBu";
 
 function buildMapper(data, attrs, colors) {
     let [min, max] = numericDomain([data], [attrs]);
@@ -48,14 +48,6 @@ function buildMapper(data, attrs, colors) {
 
 function toHumanTime(frames, fps) {
     let timeSec = frames / fps;
-
-    let pad_left = (val, char, amt) => {
-        let repCnt = amt - String(val).length;
-        let left = "";
-        for(let i = 0; i < repCnt; i++) left = left + char;
-        return left + val;
-    };
-
     return Math.round(timeSec * 100) / 100
 }
 
@@ -255,9 +247,9 @@ function makePlotArea(selector, plotInfo) {
             .attr("width", bbox.width)
             .attr("height", bbox.height)
             .attr("rx", 10)
-            .style("stroke", "rgb(235, 235, 235)")
+            .style("stroke", "rgb(245, 245, 245)")
             .style("stroke-width", 3)
-            .style("fill", "rgb(235, 235, 235)")
+            .style("fill", "rgb(245, 245, 245)")
             .attr("opacity", 0.6);
     }
 
@@ -560,7 +552,11 @@ function makePlots() {
     d3.select("#num_colors").on("input", sliderEvt("#num_colors"));
     d3.select("#reverse_colormap").on("input", onSettingChange);
     d3.select("#background_op").on("input", sliderEvt("#background_op"));
-    d3.select("#heatmap_op").on("input", sliderEvt("#heatmap_op"))
+    d3.select("#heatmap_op").on("input", sliderEvt("#heatmap_op"));
+
+    d3.select("#extra_options").on("input", (evt) => {
+        d3.selectAll(".hidden_control").style("display", (evt.target.checked)? "block": "none");
+    });
 
     // Initialize...
     onSettingChange(null);

@@ -1,4 +1,50 @@
+* {
+    box-sizing: border-box;
+}
 
+html, body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+    font-size: 3vmin;
+}
+
+#controls {
+    text-align: center;
+    padding: 0.5em;
+    margin: auto;
+}
+
+.control {
+    padding: 0.2em;
+}
+
+.description {
+    width: 40vmax;
+    padding: 0.5em;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    margin: auto;
+}
+
+.plots {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 40vmax;
+}
 
 .hover_info {
     display: none;
@@ -9,4 +55,14 @@
     opacity: 0;
     transform: translate(-50%, -2em);
     padding: 0.5em;
+}
+
+.figure {
+    width: 100%;
+    max-width: 50rem;
+    padding: 0.5em;
+}
+
+.hidden_control {
+    display: none;
 }

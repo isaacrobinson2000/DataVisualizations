@@ -2,68 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Do Degus Prefer Inspecting Objects That Look Like Them?</title>
+    <title>Do Rats Spend More Time Inspecting Objects That Look Like Them?</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="charts.js"></script>
     <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<h1 id="title">Do Rats Prefer Inspecting Objects That Look Like Them?</h1>
+<h1 id="title">Do Rats Spend More Time Inspecting Objects That Look Like Them?</h1>
 <div class="content">
-    <div class="description"></div>
-    <div id="figure1">
-        <div class="hover_info" id="figure1_hover"></div>
+    <div class="description">
+        <p>
+            The goal of this experiment was to determine if Rats have a preferential attention for objects which
+            appear to look like them. Each rat was placed in a box with 4 objects, two which look like rats (one
+            was slightly deformed), and two other objects with arbitrary appearance (lions, deformed and not deformed).
+            The rats were left in the cage for 3 minutes and filmed. The process was repeated with a box with nothing
+            in it as a control. The nose of each rat was tracked using a webcam placed above the box.
+        </p>
+        <p>
+            The following plots are heatmaps which display the amount of time the rat's nose spent in each section
+            within the video. The heatmap is placed over a still image from the video to indicate the location of
+            each social object, as the social object were moved between experiments. Use the selection dropdown at
+            the bottom to change the rat being looked at and also the bin size.
+        </p>
+        <p>
+            The results overall are mixed, and indicate the hypothesis is not true. With the exception of
+            rat 2, all of the rats spent more time around the locations of the social objects as compared to the
+            control run. Rat 1 spends more time around one of the lions, and rats 2 and 3 spend an evenly distributed
+            amount of time around all of the social objects. Only rats 5 and 6 conform to the hypothesis and spend more
+            time around the objects which look like rats.
+        </p>
     </div>
-    <div id="figure2">
-        <div class="hover_info" id="figure2_hover"></div>
-    </div>
-    <div id="controls">
-        <div class="control">
-            <label for="rat_select">Rat: </label>
-            <select name="rat" id="rat_select">
-                <option value="rat1" selected>Rat 1</option>
-                <option value="rat2">Rat 2</option>
-                <option value="rat3">Rat 3</option>
-                <option value="rat4">Rat 4</option>
-                <option value="rat5">Rat 5</option>
-                <option value="rat6">Rat 6</option>
-            </select>
+    <div class="plots">
+        <div id="figure1" class="figure">
+            <div class="hover_info" id="figure1_hover"></div>
         </div>
-
-        <div class="control">
-            <label for="colormap_select">Colormap: </label>
-            <select name="colormap" id="colormap_select">
-                <!-- Filled out by JS -->
-            </select>
+        <div id="figure2" class="figure">
+            <div class="hover_info" id="figure2_hover"></div>
         </div>
+        <div id="controls">
+            <div class="control">
+                <label for="rat_select">Rat: </label>
+                <select name="rat" id="rat_select">
+                    <option value="rat1" selected>Rat 1</option>
+                    <option value="rat2">Rat 2</option>
+                    <option value="rat3">Rat 3</option>
+                    <option value="rat4">Rat 4</option>
+                    <option value="rat5">Rat 5</option>
+                    <option value="rat6">Rat 6</option>
+                </select>
+            </div>
 
-        <div class="control">
-            <label for="reverse_colormap">Reverse Colormap: </label>
-            <input name="reverse_colormap" id="reverse_colormap" type="checkbox">
-        </div>
+            <div class="control">
+                <label for="bucket_size">Grid Size: </label>
+                <input name="bucket_size" id="bucket_size" type="range" min="8" max="70" step="1" value="30">
+                <span id="bucket_size_val">30</span><span>px</span>
+            </div>
 
-        <div class="control">
-            <label for="bucket_size">Grid Size: </label>
-            <input name="bucket_size" id="bucket_size" type="range" min="8" max="50" step="1" value="30">
-            <span id="bucket_size_val">30</span><span>px</span>
-        </div>
+            <div class="control">
+                <label for="extra_options">Advanced Settings: </label>
+                <input name="extra_options" id="extra_options" type="checkbox">
+            </div>
 
-        <div class="control">
-            <label for="num_colors">Color Steps: </label>
-            <input name="num_colors" id="num_colors" type="range" min="4" max="20" step="1" value="12">
-            <span id="num_colors_val">12</span>
-        </div>
+            <div class="control hidden_control">
+                <label for="colormap_select">Colormap: </label>
+                <select name="colormap" id="colormap_select">
+                    <!-- Filled out by JS -->
+                </select>
+            </div>
 
-        <div class="control">
-            <label for="background_op">Background Opacity: </label>
-            <input name="background_op" id="background_op" type="range" min="0" max="1" step="any" value="0.9">
-            <span id="background_op_val">0.9</span>
-        </div>
+            <div class="control hidden_control">
+                <label for="reverse_colormap">Reverse Colormap: </label>
+                <input name="reverse_colormap" id="reverse_colormap" type="checkbox" checked>
+            </div>
 
-        <div class="control">
-            <label for="heatmap_op">Heatmap Opacity: </label>
-            <input name="heatmap_op" id="heatmap_op" type="range" min="0" max="1" step="any" value="0.5">
-            <span id="heatmap_op_val">0.5</span>
+            <div class="control hidden_control">
+                <label for="num_colors">Color Steps: </label>
+                <input name="num_colors" id="num_colors" type="range" min="4" max="20" step="1" value="12">
+                <span id="num_colors_val">12</span>
+            </div>
+
+            <div class="control hidden_control">
+                <label for="background_op">Background Opacity: </label>
+                <input name="background_op" id="background_op" type="range" min="0" max="1" step="any" value="0.85">
+                <span id="background_op_val">0.85</span>
+            </div>
+
+            <div class="control hidden_control">
+                <label for="heatmap_op">Heatmap Opacity: </label>
+                <input name="heatmap_op" id="heatmap_op" type="range" min="0" max="1" step="any" value="0.4">
+                <span id="heatmap_op_val">0.4</span>
+            </div>
         </div>
     </div>
 </div>
