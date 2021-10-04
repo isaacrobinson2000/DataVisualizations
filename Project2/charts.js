@@ -34,7 +34,7 @@ let COLORMAPS = [
     "Reds"
 ]
 
-let COLORMAP_DEFAULT = "Plasma";
+let COLORMAP_DEFAULT = "Cool";
 
 function buildMapper(data, attrs, colors) {
     let [min, max] = numericDomain([data], [attrs]);
@@ -517,6 +517,8 @@ function onSettingChange(evt) {
     let colorCount = d3.select("#num_colors").node().value;
     let colormap = d3.select("#colormap_select").node().value;
     let reverseCmap = d3.select("#reverse_colormap").node().checked;
+    let bo = d3.select("#background_op").node().value;
+    let ho = d3.select("#heatmap_op").node().value;
 
     let rangeArr = reverseCmap? [1, 0]: [0, 1];
 
@@ -527,14 +529,16 @@ function onSettingChange(evt) {
         "Rat " + ratExp[ratExp.length - 1],
         binSize,
         colorCount,
-        transformColormapFunc(d3["interpolate" + colormap], d3.scaleLinear().domain([0, 1]).range(rangeArr))
+        transformColormapFunc(d3["interpolate" + colormap], d3.scaleLinear().domain([0, 1]).range(rangeArr)),
+        ho,
+        bo
     );
 }
 
 function sliderEvt(selector) {
     return (evt) => {
         let val = d3.select(selector).node().value;
-        d3.select(selector + "_val").text(val);
+        d3.select(selector + "_val").text(Math.round(val * 100) / 100);
 
         onSettingChange(evt);
     }
@@ -546,6 +550,7 @@ function makePlots() {
         .data(COLORMAPS)
         .enter()
         .append("option")
+        .property("selected", (d) => d == COLORMAP_DEFAULT)
         .attr("value", (d) => d)
         .text((d) => d);
 
@@ -554,6 +559,8 @@ function makePlots() {
     d3.select("#rat_select").on("input", onSettingChange);
     d3.select("#num_colors").on("input", sliderEvt("#num_colors"));
     d3.select("#reverse_colormap").on("input", onSettingChange);
+    d3.select("#background_op").on("input", sliderEvt("#background_op"));
+    d3.select("#heatmap_op").on("input", sliderEvt("#heatmap_op"))
 
     // Initialize...
     onSettingChange(null);
