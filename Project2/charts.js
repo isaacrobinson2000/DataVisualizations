@@ -128,6 +128,7 @@ function makePlotArea(selector, plotInfo) {
         dataList,
         legendNames = null,
         legendColors = null,
+        legendOpacity = 1,
         width = 600,
         height = 400,
         margins = {top: 20, right: 30, bottom: 40, left: 50},
@@ -226,7 +227,8 @@ function makePlotArea(selector, plotInfo) {
                 .attr("fill", legendColors[i])
                 .attr("cx", inset)
                 .attr("cy", offset)
-                .attr("r", legendTextSize / 2);
+                .attr("r", legendTextSize / 2)
+                .attr("opacity", legendOpacity);
 
             legend.append("text")
                 .attr("x", inset + textInset)
@@ -336,7 +338,7 @@ function setupHover(selector, rects) {
 
     // Create hover functions...
     let mouseon = (evt, d) => {
-        d3.select(evt.target).attr("stroke", "white").attr("stroke_width", "3px");
+        d3.select(evt.target).attr("stroke", "black").attr("stroke-width", "3px");
         tooltip.style("opacity", 1).style("display", "block");
     }
 
@@ -399,6 +401,7 @@ function updatePlots(
             dataList: [control.bins],
             legendNames: controlLabels.labels,
             legendColors: controlLabels.colorLabels,
+            legendOpacity: overlayOpacity,
             width: WIDTH,
             height: HEIGHT,
             margins: MARGINS,
@@ -412,7 +415,7 @@ function updatePlots(
 
         controlPlot.plotArea
             .append("image")
-            .attr("href", "imgs/" + data_name + "control.png")
+            .attr("href", "imgs/" + data_name + "controlTrace.png")
             .attr("x", controlPlot.xProj(0))
             .attr("y", controlPlot.yProj(0))
             .attr("width", controlPlot.xProj(VIDEO_SIZE.width))
@@ -454,6 +457,7 @@ function updatePlots(
             dataList: [so.bins],
             legendNames: soLabels.labels,
             legendColors: soLabels.colorLabels,
+            legendOpacity: overlayOpacity,
             width: WIDTH,
             height: HEIGHT,
             margins: MARGINS,
@@ -467,7 +471,7 @@ function updatePlots(
 
         soPlot.plotArea
             .append("image")
-            .attr("href", "imgs/" + data_name + "so.png")
+            .attr("href", "imgs/" + data_name + "soTrace.png")
             .attr("x", controlPlot.xProj(0))
             .attr("y", controlPlot.yProj(0))
             .attr("width", controlPlot.xProj(VIDEO_SIZE.width))
