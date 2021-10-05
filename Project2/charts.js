@@ -605,9 +605,9 @@ function setupHover(selector, rects) {
     }
 
     let mousemove = (evt, d) => {
-        let bbox = tooltip.html(
+        tooltip.html(
             "Time Spent: " + Math.round((d.count / VIDEO_FPS) * 100) / 100 + "s"
-        ).node().getBoundingClientRect();
+        );
 
         tooltip
             .style("left", evt.clientX + "px")
