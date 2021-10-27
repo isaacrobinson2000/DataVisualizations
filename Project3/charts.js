@@ -757,7 +757,7 @@ function makePlots() {
             }
         );
 
-        addHover("#tooltip", scatter, (d) => "Name: " + d.Name + "<br>Area: " + d["area 1"] + "<br>Staseis: " + d["staseis"]);
+        addHover("#tooltip", scatter, (d) => "Name: " + d.Name + "<br>Area: " + d["area 2"] + "<br>Staseis: " + d["staseis"]);
     })
 }
 
