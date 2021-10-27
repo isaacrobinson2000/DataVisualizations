@@ -5,3 +5,6 @@
 
 ### Project 2: Raster Plot
  - [Do Rats Spend More Time Inspecting Objects That Look Like Them?](Project2/index.html)
+
+### Project 3: Polis and Staseis
+ - [Was Stasis More Common in Smaller Poleis?](Project3/index.html)
