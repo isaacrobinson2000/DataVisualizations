@@ -740,7 +740,7 @@ function makePlots() {
             width: 600,
             height: 400,
             title: "Polis Area vs. Stasis Occurrences",
-            xLabel: "Land Area of Polis",
+            xLabel: "Land Area of Polis (Hectares)",
             yLabel: "Number of Stasis",
             xAttr: ["area 2"],
             yAttr: ["staseis"],
