@@ -22,13 +22,13 @@ body {
 
 .description {
     padding: 2em;
-    flex-basis: 44%;
+    flex-basis: 24%;
     flex-grow: 1;
     flex-shrink: 1;
 }
 
 .figureArea {
-    flex-basis: 55%;
+    flex-basis: 75%;
     flex-grow: 1;
     flex-shrink: 1;
 }
@@ -56,4 +56,14 @@ body {
     opacity: 0;
     transform: translate(-50%, -100%);
     padding: 0.5em;
+}
+
+@media print {
+    .description {
+        flex-basis: 45%;
+    }
+
+    .figureArea {
+        flex-basis: 55%;
+    }
 }
