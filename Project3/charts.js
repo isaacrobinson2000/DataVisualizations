@@ -5,27 +5,117 @@ let WORLD = {};
 let DATA = {};
 let PlotElements = {};
 
-function buildMapper(data, attrs, colors) {
-    let [min, max] = numericDomain([data], [attrs]);
+let COLORMAPS = [
+    "Inferno",
+    "Magma",
+    "Plasma",
+    "Warm",
+    "Cool",
+    "CubehelixDefault",
+    "BuGn",
+    "BuPu",
+    "GnBu",
+    "OrRd",
+    "PuBuGn",
+    "PuBu",
+    "PuRd",
+    "RdPu",
+    "YlGnBu",
+    "YlGn",
+    "YlOrBr",
+    "YlOrRd",
+    "Blues",
+    "Greens",
+    "Greys",
+    "Oranges",
+    "Purples",
+    "Reds"
+]
 
-    return (value) => {
-        let norm_color = (value - min) / (max - min);
-        let no_correct_idx = Math.floor(norm_color * colors.length);
-        return colors[no_correct_idx - Math.floor(no_correct_idx / colors.length)];
+let numSort = (a, b) => a - b;
+
+let VIEWABLE_ATTRIBUTES = {
+    // Pretty name: [table name, domain type, legend title, reversed, is number, filter zero]
+    "Polisity": ["Polisity", ordinalDomain(numSort), "Certainty", true, true, false],
+    "Hellenicity": ["Hellenicity", ordinalDomain(numSort), "Most Greek", true, true, false],
+    //"In and Out of Existance": ["In/out", ordinalDomain, ""],
+    "Staseis": ["staseis", numericDomain, "Occurrences", false, true, true],
+    "Prominence 1": ["prom 1", numericDomain, "Prominence", false, true, false],
+    "Prominence 2": ["prom 2", ordinalDomain(numSort), "Prominence", false, true, false],
+    "Prominence 3": ["prom 3", ordinalDomain(numSort), "Prominence", false, true, false],
+    "Total Controlled Area": ["area 1", ordinalDomain(numSort), "Area Category", false, true, true],
+    "Area Within Polis": ["area 2", numericDomain, "Area (Hectares)", false, true, true],
+    //"Silver Coins Issued": ["Silver", ]
+};
+
+function buildMapper(data, attrs, colors, domainMapper = numericDomain) {
+    // Builds a 'ColorMap' object, function with some extra attributes...
+    let vals = domainMapper([data], [attrs]);
+
+    if(domainMapper.listing) {
+        // Convert to dictionary for key => integer...
+        let valToNum = {};
+        for(let i = 0; i < vals.length; i++) valToNum[vals[i]] = i;
+
+        let mapper = function(value) {
+            return colors[valToNum[value]];
+        }
+
+        mapper.listing = true;
+        mapper.keyList = vals;
+        mapper.keyToInteger = valToNum;
+        mapper.colorList = colors;
+
+        return mapper;
+    }
+    else {
+        let [min, max] = vals;
+
+        let mapper = function(value) {
+            let norm_color = (value - min) / (max - min);
+            let no_correct_idx = Math.floor(norm_color * colors.length);
+            return colors[no_correct_idx - Math.floor(no_correct_idx / colors.length)];
+        }
+
+        mapper.listing = false;
+        mapper.range = vals;
+        mapper.colorList = colors;
+
+        return mapper;
     }
 }
 
-function getCMapLabels(data, attrs, colors) {
-    let [min, max] = numericDomain([data], [attrs]);
+function getCMapLabels(colorMap, topLabel = null, reverse = false) {
     let vals = [];
+    let colors = [];
 
-    for(let i = 0; i < colors.length; i++)
-        vals[i] = (((i / colors.length) * (max - min)) + min);
+    // This is a numeric/ordinal colormap...
+    if(colorMap.listing) {
+        for(let i = 0; i < colorMap.keyList.length; i++) {
+            vals[i] = colorMap.keyList[i];
+            colors[i] = colorMap.colorList[i];
+        }
+    }
+    else {
+        let [min, max] = colorMap.range;
+
+        let clean = (n) => Math.round(n * 10) / 10;
+
+        for(let i = 0; i < colorMap.colorList.length; i++) {
+            vals[i] = clean((((i / colorMap.colorList.length) * (max - min)) + min));
+            colors[i] = colorMap.colorList[i];
+        }
+    }
+
+    if(reverse) {
+        colors.reverse();
+        vals.reverse();
+    }
 
     return {
-        labels: ["Time (s)", ...vals.reverse()],
-        colorLabels: [...colors, "transparent"].reverse()
-    }
+        labels: (topLabel !== null)? [topLabel, ...vals.reverse()]: vals.reverse(),
+        colorLabels: (topLabel !== null)? [...colors, "transparent"].reverse(): colors.reverse()
+    };
 }
 
 // Some domain, or bound functions...
@@ -40,7 +130,15 @@ function numericDomain(dataList, attrs) {
     return [minVal, maxVal]
 }
 
-function categoryDomain(dataList, attrs) {
+function ordinalDomain(sortFunc = undefined) {
+    let res = (dataList, attrs) => {
+        return categoryDomain(dataList, attrs, true, sortFunc);
+    }
+    res.listing = true;
+    return res;
+}
+
+function categoryDomain(dataList, attrs, _sortItems = false, _sortFunc = undefined) {
     if(typeof(attrs) == "string") {
         attrs = Array(dataList.length).fill(attrs);
     }
@@ -56,21 +154,28 @@ function categoryDomain(dataList, attrs) {
     }
 
     let finalArr = Array.from(symbolSet);
-    finalArr.sort();
+    if(_sortItems) return finalArr.sort(_sortFunc);
 
     return finalArr;
 }
+// Tells methods these list all possible values rather then a range...
+categoryDomain.listing = true;
+numericDomain.listing = false;
 
 function getPaddedDomain(padding = 1) {
-    return (d, lbl) => {
+    let func = (d, lbl) => {
         let [b, t] = numericDomain(d, lbl);
         let sign = Math.sign(t - b);
         return [b - sign * padding, t + sign * padding];
     }
+    func.listing = false;
+    return func;
 }
 
 function getRawDomain(arr) {
-    return (a, b) => arr;
+    let func = (a, b) => arr;
+    func.listing = false;
+    return func;
 }
 
 function parseLegendLocation(legendLocation) {
@@ -93,6 +198,17 @@ function addLegend(plotObject, legendParams, deletePrior = true) {
         legendTextSize = 13,
         legendPadding = 3
     } = legendParams;
+
+    let {
+        width,
+        height,
+        margins
+    } = plotObject;
+
+    let fullWidth = width;
+    let fullHeight = height;
+    width = fullWidth - margins.left - margins.right;
+    height = fullHeight - margins.top - margins.bottom;
 
     if(legendNames !== null) {
         // Remove the old legend...
@@ -212,7 +328,7 @@ function makePlotArea(selector, plotInfo) {
     let plotArea = svg
         .append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")")
-        .attr("clip-path", "url(#plot-box)");
+        //.attr("clip-path", "url(#plot-box)");
 
     // Use data bounds to make x and y projections/transforms for going from data space to svg space.
     let xProj = xScaler().domain(xDomain(dataList, xAttr)).range([0, width]); // scaleTime, scaleLinear Ex...
@@ -225,6 +341,8 @@ function makePlotArea(selector, plotInfo) {
         xAxis = plotArea.append("g").attr("transform", "translate(0, " + height + ")").call(d3.axisBottom(xProj));
     if(plotYAxis)
         yAxis = plotArea.append("g").call(d3.axisLeft(yProj));
+
+    plotArea = plotArea.append("g").attr("clip-path", "url(#plot-box)");
 
     let xLabelTxt = svg.append("text")
         .attr("x", margins.left + (width / 2))
@@ -260,7 +378,10 @@ function makePlotArea(selector, plotInfo) {
         yLabel: yLabelTxt,
         title: titleTxt,
         xAxis,
-        yAxis
+        yAxis,
+        width: fullWidth,
+        height: fullHeight,
+        margins: margins
     };
 }
 
@@ -280,34 +401,6 @@ function prepArgs(dataList, xAttr, yAttr, attrs) {
     }
 
     return [dataList, xAttr, yAttr, applier];
-}
-
-function setupHover(selector, rects) {
-    let tooltip = d3.select(selector);
-
-    // Create hover functions...
-    let mouseon = (evt, d) => {
-        d3.select(evt.target).attr("stroke", "black").attr("stroke-width", "3px");
-        tooltip.style("opacity", 1).style("display", "block");
-    }
-
-    let mousemove = (evt, d) => {
-        tooltip.html(
-            "Time Spent: " + Math.round((d.count / VIDEO_FPS) * 100) / 100 + "s"
-        );
-
-        tooltip
-            .style("left", evt.clientX + "px")
-            .style("top", (evt.clientY - 10) + "px");
-    }
-
-    let mouseoff = (evt, d) => {
-        tooltip.style("opacity", 0).style("display", "none");
-        d3.select(evt.target).attr("stroke", "none");
-    }
-
-    // Attach the events...
-    rects.on("mouseover", mouseon).on("mousemove", mousemove).on("mouseleave", mouseoff);
 }
 
 function transformColormapFunc(colorFunc, scale) {
@@ -330,7 +423,140 @@ function scaledProjection(projection, scaleX, scaleY) {
     return [d3.geoTransform(data), data];
 }
 
-function geoPlot(plotName, selector, world, data, centerLocation, scale, colormap, colorField) {
+function update(info = {}) {
+    let  {
+        plotName,
+        colormap = "Plasma",
+        colorField = "Staseis",
+        numColors = 14,
+        reverseCMap = false
+    } = info;
+
+    let [
+        tblName,
+        domain,
+        legendTitle,
+        reverse,
+        isNumeric,
+        filterZero
+    ] = VIEWABLE_ATTRIBUTES[colorField];
+
+    if(isNumeric) {
+        for(let row of DATA.polisData) {
+            row[tblName] = (row[tblName] === "")? null: +row[tblName];
+        }
+    }
+
+    let rangeArr = reverseCMap? [1, 0]: [0, 1];
+    let modCMap = transformColormapFunc(d3["interpolate" + colormap], d3.scaleLinear().domain([0, 1]).range(rangeArr));
+    let cList = d3.range(numColors).map((d) => modCMap(d / numColors));
+
+    let finalColorMap = buildMapper(DATA.polisData, tblName, cList, domain);
+    let legendColors = getCMapLabels(finalColorMap, legendTitle, reverse);
+
+    addLegend(PlotElements[plotName].plot, {
+        legendNames: legendColors.labels,
+        legendColors: legendColors.colorLabels,
+        legendOpacity: 1,
+        legendLocation: "outside_center_right",
+        legendTextSize: 13,
+        legendPadding: 3,
+    });
+
+    addHover("#tooltip", PlotElements[plotName].polis, (d) => "Name: " + d.Name + "<br>" + colorField + ": " + d[tblName]);
+
+    PlotElements[plotName].polis.on("click", (evt, d) => {
+        window.open(d["Pleiades link"], '_blank');
+    })
+
+    PlotElements[plotName].polis
+        .attr("r", (d) => ((d[tblName] != null)? 2.5: 0) + "px")
+        .attr("fill", (d) => (d[tblName] != null && !(filterZero && d[tblName] === 0))? finalColorMap(d[tblName]): "transparent");
+}
+
+function addLine(plot, dataObj, index = 0, attrs = {}) {
+    let {dataList, xAttr, yAttr} = dataObj;
+    let {plotArea, xProj, yProj} = plot;
+
+    [dataList, xAttr, yAttr, attrs] = prepArgs(dataList, xAttr, yAttr, attrs);
+
+    return attrs(plotArea.insert("path", ".legend")
+        .datum(dataList[index])
+        .enter()
+        .attr("fill", "none")
+        .attr("stroke-width", 1.5)
+        .attr("stroke", "blue")
+        .attr("d", d3.line()
+            .x((d) => xProj(d[xAttr[index]]))
+            .y((d) => yProj(d[yAttr[index]]))
+        ));
+}
+
+function addHover(selector, data, textFunc) {
+    let tooltip = d3.select(selector);
+
+    // Create hover functions...
+    let mouseon = (evt, d) => {
+        d3.select(evt.target).attr("stroke", "black").attr("stroke-width", "3px");
+        tooltip.style("opacity", 1).style("display", "block");
+    }
+
+    let mousemove = (evt, d) => {
+        tooltip.html(
+            textFunc(d)
+        );
+
+        tooltip
+            .style("left", evt.clientX + "px")
+            .style("top", (evt.clientY - 10) + "px");
+    }
+
+    let mouseoff = (evt, d) => {
+        tooltip.style("opacity", 0).style("display", "none");
+        d3.select(evt.target).attr("stroke", "none");
+    }
+
+    // Attach the events...
+    data.on("mouseover", mouseon).on("mousemove", mousemove).on("mouseleave", mouseoff);
+}
+
+function addScatter(plot, dataObj, index = 0, attrs = {}) {
+    let {dataList, xAttr, yAttr} = dataObj;
+    let {plotArea, xProj, yProj} = plot;
+
+    [dataList, xAttr, yAttr, attrs] = prepArgs(dataList, xAttr, yAttr, attrs);
+
+    return attrs(plotArea.insert("g", ".legend")
+        .selectAll("dot")
+        .data(dataList[index])
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => xProj(d[xAttr[index]]))
+        .attr("cy", (d) => yProj(d[yAttr[index]]))
+        .attr("r", 3));
+}
+
+function addHistogram(plot, dataObj, index = 0, attrs = {}, padding = 5) {
+    let {dataList, xAttr, yAttr} = dataObj;
+    let {plotArea, xProj, yProj, height, margins} = plot;
+
+    [dataList, xAttr, yAttr, attrs] = prepArgs(dataList, xAttr, yAttr, attrs);
+
+    return attrs(
+        plotArea.append("g")
+        .selectAll("bins")
+        .data(dataList[index])
+        .enter()
+        .append("rect")
+        .attr("x", (d) => xProj(d[xAttr[index]]) + padding)
+        .attr("y", (d) => yProj(d[yAttr[index]]))
+        .attr("width", xProj.bandwidth() - padding * 2)
+        .attr("height", (d) => (height - margins.top - margins.bottom) - yProj(d[yAttr[index]]))
+        .attr("fill", "blue")
+    );
+}
+
+function geoPlot(plotName, selector, world, data, centerLocation, scale, title = "Poleis in the Mediterranean") {
     let [width, height] = [300, 200];
 
     let plot = makePlotArea(selector, {
@@ -344,8 +570,8 @@ function geoPlot(plotName, selector, world, data, centerLocation, scale, colorma
         legendOpacity: 1,
         width: 600,
         height: 400,
-        margins: {top: 10, right: 50, bottom: 0, left: 0},
-        title: "Poleis in the Mediterranean",
+        margins: {top: 10, right: 90, bottom: 0, left: 0},
+        title: title,
         xLabel: "",
         yLabel: "",
         xAttr: "x",
@@ -372,7 +598,7 @@ function geoPlot(plotName, selector, world, data, centerLocation, scale, colorma
         .attr("y", plot.yProj(0))
         .attr("width", plot.xProj(width))
         .attr("height", plot.yProj(height))
-        .attr("fill", "paleturquoise");
+        .attr("fill", "white");//"#c3eeee");
 
     let worldData = plot.plotArea
         .append("g")
@@ -381,7 +607,7 @@ function geoPlot(plotName, selector, world, data, centerLocation, scale, colorma
         .enter()
         .append("path")
         .attr("d", pather)
-        .attr("fill", "wheat")
+        .attr("fill", "lightgrey")//"#f5e6cb")
         .attr("stroke", "white")
         .attr("stroke-width", "0.5px");
 
@@ -401,6 +627,10 @@ function geoPlot(plotName, selector, world, data, centerLocation, scale, colorma
         world: worldData,
         polis: polisData
     };
+
+    update({
+        plotName: plotName
+    });
 }
 
 function makePlots() {
@@ -410,11 +640,124 @@ function makePlots() {
         d3.json("data/countries-coastline-2km5.geo.json")
     ]).then((data) => {
         // Unpack loaded files...
-        [DATA.polis_data, DATA.world] = data;
+        [DATA.polisData, DATA.world] = data;
 
         console.log(DATA);
-        geoPlot("plot1", "#figure1", DATA.world, DATA.polis_data, [21.048012, 39.553127], 500);
-        geoPlot("plot2", "#figure2", DATA.world, DATA.polis_data, [24.048012, 38.053127], 1300);
+        geoPlot(
+            "plot1", "#figure1", DATA.world, DATA.polisData, [21.048012, 39.553127], 500,
+            "Stasis Occurrences"
+        );
+        geoPlot(
+            "plot2", "#figure3", DATA.world, DATA.polisData, [24.048012, 38.053127], 1300,
+            "Stasis Occurrences (Zoomed In)"
+        );
+        geoPlot(
+            "plot3", "#figure2", DATA.world, DATA.polisData, [21.048012, 39.553127], 500,
+            "Area Within Polis"
+        );
+        geoPlot(
+            "plot4", "#figure4", DATA.world, DATA.polisData, [24.048012, 38.053127], 1300,
+            "Area Within Polis (Zoomed In)"
+        );
+
+        update({
+            plotName: "plot1",
+            colormap: "Plasma",
+            colorField: "Staseis",
+            numColors: 10,
+            reverseCMap: true
+        });
+
+        update({
+            plotName: "plot2",
+            colormap: "Plasma",
+            colorField: "Staseis",
+            numColors: 10,
+            reverseCMap: true
+        });
+
+        update({
+            plotName: "plot3",
+            colormap: "Plasma",
+            colorField: "Area Within Polis",
+            numColors: 10,
+            reverseCMap: true
+        });
+
+        update({
+            plotName: "plot4",
+            colormap: "Plasma",
+            colorField: "Area Within Polis",
+            numColors: 10,
+            reverseCMap: true
+        });
+
+        // Histogram
+        let counts = {};
+        let total = {}
+        let histData = [];
+        for(let entry of DATA.polisData) {
+            if(entry["staseis"] == 0 || entry["area 1"] == 0) continue;
+
+            counts[entry["area 1"]] = (counts[entry["area 1"]] ?? 0) + 1;
+            total[entry["area 1"]] = (total[entry["area 1"]] ?? 0) + entry["staseis"];
+        }
+        for(let item in counts) histData.push({"area": item, "staseis": total[item] / counts[item]});
+
+        PlotElements.areaBar = makePlotArea("#figure5", {
+            yScaler: d3.scaleLinear,
+            xScaler: d3.scaleBand,
+            xDomain: ordinalDomain(numSort),
+            yDomain: numericDomain,
+            dataList: [histData],
+            width: 600,
+            height: 400,
+            title: "Total Controlled Area vs. Stasis Occurrences",
+            xLabel: "Total Controlled Land (Category)",
+            yLabel: "Average Number of Stasis",
+            xAttr: ["area"],
+            yAttr: ["staseis"],
+            labelSize: 15,
+            titleSize: 20
+        });
+
+        let histogram = addHistogram(PlotElements.areaBar, {dataList: [histData], xAttr: "area", yAttr: "staseis"}, 0, {
+            "fill": "#5ab4cd"
+        });
+
+        let round = (d) => Math.round(d * 100) / 100
+
+        addHover("#tooltip", histogram, (d) => "Area: " + d.area + "<br>Avg. Staseis: " + round(d.staseis))
+
+        DATA.filteredPolis = DATA.polisData.filter((d) => d.staseis !== 0 && d["area 2"] !== "" && d["area 2"] !== 0);
+
+        PlotElements.linePlot = makePlotArea("#figure6", {
+            yScaler: d3.scaleLinear,
+            xScaler: d3.scaleLinear,
+            xDomain: numericDomain,
+            yDomain: getPaddedDomain(3),
+            dataList: [DATA.filteredPolis],
+            width: 600,
+            height: 400,
+            title: "Polis Area vs. Stasis Occurrences",
+            xLabel: "Land Area of Polis",
+            yLabel: "Number of Stasis",
+            xAttr: ["area 2"],
+            yAttr: ["staseis"],
+            labelSize: 15,
+            titleSize: 20
+        });
+
+        let scatter = addScatter(
+            PlotElements.linePlot,
+            {dataList: [DATA.filteredPolis], xAttr: "area 2", yAttr: "staseis"},
+            0,
+            {
+                "fill": "#5ab4cd"
+            }
+        );
+
+        addHover("#tooltip", scatter, (d) => "Name: " + d.Name + "<br>Area: " + d["area 1"] + "<br>Staseis: " + d["staseis"]);
     })
 }
 
