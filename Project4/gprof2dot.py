@@ -124,6 +124,9 @@ class Event(object):
         assert val is not None
         return self._formatter(val)
 
+    def __repr__(self):
+        return f"<gprof2dot.Event '{self.name}'>"
+
 
 CALLS = Event("Calls", 0, add, times)
 SAMPLES = Event("Samples", 0, add, times)
@@ -243,8 +246,9 @@ class Function(Object):
 
         # Strip function parameters from name by recursively removing paired parenthesis
         while True:
-            name, n = self._parenthesis_re.subn('', name)
-            if not n:
+            old_name = name
+            name = self._parenthesis_re.sub('', name)
+            if old_name == name:
                 break
 
         # Strip const qualifier
@@ -252,8 +256,9 @@ class Function(Object):
 
         # Strip template parameters from name by recursively removing paired angles
         while True:
-            name, n = self._angles_re.subn('', name)
-            if not n:
+            old_name = name
+            name = self._angles_re.sub('', name)
+            if old_name == name:
                 break
 
         return name
@@ -780,21 +785,21 @@ class Profile(Object):
 
     def dump(self):
         for function in compat_itervalues(self.functions):
-            sys.stderr.write('Function %s:\n' % (function.name,))
+            print('Function %s:' % (function.name,))
             self._dump_events(function.events)
             for call in compat_itervalues(function.calls):
                 callee = self.functions[call.callee_id]
-                sys.stderr.write('  Call %s:\n' % (callee.name,))
+                print('  Call %s:' % (callee.name,))
                 self._dump_events(call.events)
         for cycle in self.cycles:
-            sys.stderr.write('Cycle:\n')
+            print('Cycle:')
             self._dump_events(cycle.events)
             for function in cycle.functions:
-                sys.stderr.write('  Function %s\n' % (function.name,))
+                print('  Function %s' % (function.name,))
 
     def _dump_events(self, events):
         for event, value in compat_iteritems(events):
-            sys.stderr.write('    %s: %s\n' % (event.name, event.format(value)))
+            print('    %s: %s' % (event.name, event.format(value)))
 
 
 
