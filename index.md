@@ -8,3 +8,6 @@
 
 ### Project 3: Polis and Staseis
  - [Was Stasis More Common in Smaller Poleis?](Project3/index.html)
+
+### Project 4: Graph Visual
+ - [Is Strassen Matrix Multiplication Slower on 'Small' Matrices?](Project4/index.html)
