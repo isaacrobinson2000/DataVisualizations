@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Is most time in sorting is spent on comparisons?</title>
+    <title>Is Strassen Matrix Multiplication Slower on 'Small' Matrices?</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython_stdlib.js"></script>
@@ -12,17 +12,34 @@
 </head>
 <body onload="brython()">
 <div class="description">
-    <h1 class="title">Is most time in sorting is spent on comparisons?</h1>
-    <p>
-        Testing...
+    <h1 class="title">Is Strassen Matrix Multiplication Slower on 'Small' Matrices?</h1>
+    <p class="description">
+        The following 2 graphs depict the function call stacks for a program that runs 2 matrix multiplication
+        implementations against each other, a Strassen matrix multiplication and naive matrix multiplication against
+        each other. The size of the matrices used are 512x512. One uses a switching size of 2 (meaning the Strassen
+        switches to simple multiplication once hitting a 2x2 matrix) while the second graph using a switching size of
+        128. As seen by the icicle graphs, increasing the size at which the Strassen switches to naive multiplication
+        increases the performance, indicating Strassen is slower on small sized matrices. Click on bars in the icicle
+        plots to zoom in on them. You can also upload your own callgrind files for custom analysis. Warning: This
+        visual may take a while to load and respond to input changes.
     </p>
 </div>
 <div class="figureArea">
     <div class="figures">
-        <div id="figure1" class="figure"></div>
-        <div id="figure2" class="figure"></div>
+        <div id="figure1" class="figure">
+            <p class="loading">Loading....</p>
+        </div>
+        <div id="figure2" class="figure">
+            <p class="loading">Loading....</p>
+        </div>
     </div>
     <div id="tooltip"></div>
 </div>
+<p class="sources">
+    Sources:
+    Callgrind Output: From my own C++ Code. (<a href="data/mat_mult_debug.cpp">data/mat_mult_debug.cpp</a>)<br>
+    Uses code from <a href="https://github.com/jrfonseca/gprof2dot">https://github.com/jrfonseca/gprof2dot</a> to
+    parse callgrind files. Modified version can be found <a href="gprof2dot.py">here</a>.
+</p>
 </body>
 </html>
