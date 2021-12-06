@@ -1,0 +1,92 @@
+* {
+    box-sizing: border-box;
+}
+
+h1 {
+    text-align: center;
+    font-size: 1.8em;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 3px;
+}
+
+.figure1controls {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    width: 100%;
+    padding: 3px;
+    margin: 0;
+}
+
+#figure1control {
+    flex-grow: 1;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.description {
+    padding: 2em;
+    flex-basis: 24%;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.figureArea {
+    flex-basis: 75%;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.figures {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#figure1Area {
+    flex-basis: 100%;
+}
+
+.figure {
+    flex-shrink: 1;
+    flex-grow: 1;
+    flex-basis: 50%;
+    /*padding: 2em 0 2em 0;*/
+    min-width: 10em;
+}
+
+#tooltip {
+    display: none;
+    position: fixed;
+    font-size: 0.8em;
+    background-color: rgba(230, 230, 230, 0.95);
+    border-radius: 0.25em;
+    color: black;
+    transform: translate(-100%, -50%) translate(-5px);
+    padding: 0.25em;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.dot {
+    height: 1em;
+    width: 1em;
+    background-color: black;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 0.2em;
+}
+
+table {
+    text-align: center;
+    border-spacing: 0;
+}
