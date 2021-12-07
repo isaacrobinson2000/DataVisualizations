@@ -148,7 +148,12 @@ function addLegend(plotObject, legendParams, deletePrior = true) {
         legendOpacity = 1,
         legendLocation = "inside_top_left",
         legendTextSize = 13,
-        legendPadding = 3
+        legendPadding = 3,
+        onEnter = () => {},
+        onExit = () => {},
+        onMove = () => {},
+        onClick = () => {},
+        onAddRect = () => {}
     } = legendParams;
 
     let {
@@ -194,8 +199,15 @@ function addLegend(plotObject, legendParams, deletePrior = true) {
 
         let anchorSide = legendLocation.leftSide? "start": "end";
 
+        function connect(rect, i) {
+            rect.on("mouseover", (evt) => onEnter(evt, legendNames[i], i))
+                .on("mousemove", (evt) => onMove(evt, legendNames[i], i))
+                .on("mouseleave", (evt) => onExit(evt, legendNames[i], i))
+                .on("click", (evt) => onClick(evt, legendNames[i], i));
+        }
+
         for(let i = 0; i < legendNames.length; i++) {
-            legend.append("rect")
+            let rect = legend.append("rect")
                 .attr("stroke", (legendColors[i] !== "transparent")? "black": "none")
                 .attr("fill", legendColors[i])
                 .attr("x", inset - legendTextSize / 2)
@@ -204,6 +216,9 @@ function addLegend(plotObject, legendParams, deletePrior = true) {
                 .attr("height", legendTextSize)
                 .attr("r", legendTextSize / 2)
                 .attr("opacity", legendOpacity);
+
+            connect(rect, i);
+            onAddRect(rect, legendNames[i], i);
 
             legend.append("text")
                 .attr("x", inset + textInset)
@@ -305,7 +320,9 @@ function makePlotArea(selector, plotInfo) {
         yAxis = plotArea.append("g").call(axisEngineY);
     }
 
-    plotArea = plotArea.append("g").attr("clip-path", "url(#plot-box" + ID_GEN + ")").append("g");
+    plotArea = plotArea.append("g").attr("clip-path", "url(#plot-box" + ID_GEN + ")");
+    plotArea = plotArea.append("g");
+
     ID_GEN++;
 
     if(interactive) {
@@ -415,11 +432,6 @@ function addLine(plot, dataObj, index = 0, attrs = {}) {
     let {plotArea, xProj, yProj} = plot;
 
     [dataList, xAttr, yAttr, attrs] = prepArgs(dataList, xAttr, yAttr, attrs);
-
-    console.log(d3.line()
-        .x((d) => xProj(d[xAttr[index]]))
-        .y((d) => yProj(d[yAttr[index]]))(dataList[index])
-    );
 
     return attrs(plotArea.insert("path", ".legend")
         .attr("fill", "none")

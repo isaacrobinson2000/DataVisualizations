@@ -41,7 +41,7 @@ body {
 }
 
 .figureArea {
-    flex-basis: 75%;
+    flex-basis: 65%;
     flex-grow: 1;
     flex-shrink: 1;
 }
@@ -60,7 +60,7 @@ body {
     flex-shrink: 1;
     flex-grow: 1;
     flex-basis: 50%;
-    /*padding: 2em 0 2em 0;*/
+    padding: 1em 0 1em 0;
     min-width: 10em;
 }
 
@@ -89,4 +89,44 @@ body {
 table {
     text-align: center;
     border-spacing: 0;
+}
+
+#playspan {
+    display: flex;
+}
+
+#playbutton {
+    padding: 0.3em;
+    width: 2em;
+    height: 2em;
+    margin: 0 0.5em;
+}
+
+button {
+    color: white;
+    background-color: slategray;
+    border: none;
+    border-radius: 25%;
+    box-shadow: 0.2em 0.2em darkslategray;
+}
+
+button:hover {
+    background-color: darkslategray;
+    border: none;
+    border-radius: 25%;
+    box-shadow: 0.2em 0.2em slategray;
+}
+
+button:active {
+    background-color: slategray;
+    border: none;
+    border-radius: 25%;
+    box-shadow: 0.1em 0.1em darkslategray;
+}
+
+.sources {
+    width: 100%;
+    text-align: center;
+    font-size: medium;
+    font-style: italic;
 }

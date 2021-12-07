@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Title</title>
+        <title>Is Delta Still the most Prevalent COVID-19 Variant?</title>
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script src="chartlib.js"></script>
         <script src="charts.js"></script>
@@ -11,7 +11,7 @@
     </head>
     <body>
     <div class="description">
-        <h1 class="title">Title</h1>
+        <h1 class="title">Is Delta Still the most Prevalent COVID-19 Variant?</h1>
         <p>
             Description...
         </p>
@@ -22,7 +22,10 @@
                 <div id="figure1"></div>
                 <p class="figure1controls">
                     <span id="figure1date">Date: </span>
-                    <input id="figure1control" type="range">
+                    <span id="playspan" style="width: 100%;">
+                        <button id="playbutton">▶</button>
+                        <input id="figure1control" type="range">
+                    </span>
                 </p>
             </div>
             <div id="figure2" class="figure"></div>
@@ -31,6 +34,7 @@
         <div id="tooltip"></div>
     </div>
     <footer class="sources">
+        Dataset From:
         Emma B. Hodcroft. 2021. "CoVariants: SARS-CoV-2 Mutations and Variants of Interest."
         <a href="https://covariants.org/">https://covariants.org/</a>
     </footer>

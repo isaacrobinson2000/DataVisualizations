@@ -114,8 +114,8 @@ async function updateLinePlot(selector, data, key, title, color) {
     let linePlot = makePlotArea(selector, {
         yScaler: d3.scaleLinear,
         xScaler: d3.scaleTime,
-        xDomain: getRawDomain([data.week[0], data.week[data.week.length - 1]]),
-        yDomain: getPaddedDomain(3),
+        xDomain: getRawDomain([new Date(data.week[0].valueOf() - 864000000), new Date(data.week[data.week.length - 1].valueOf() + 864000000)]),
+        yDomain: getPaddedDomain(1),
         dataList: [listData],
         legendOpacity: 1,
         width: 450,
@@ -127,17 +127,38 @@ async function updateLinePlot(selector, data, key, title, color) {
         yAttr: key,
         xAttr: "week",
         labelSize: 15,
-        titleSize: 20,
+        titleSize: 18,
         interactive: true,
         zoomExtents: [1, 5],
         onZoomOrPan: (evt) => {
-            areaPlot.xAxis.selectAll("text").style("text-anchor", "start").attr("transform", "rotate(40)");
+            linePlot.xAxis.selectAll("text").style("text-anchor", "start").attr("transform", "rotate(40)");
         }
     });
     linePlot.xAxis.selectAll("text").style("text-anchor", "start").attr("transform", "rotate(40)");
 
-    let line = addLine(linePlot, {dataList: [listData], xAttr: ["week"], yAttr: [key]}, 0, {"stroke": color});
-    let scatter = addScatter(linePlot, {dataList: [listData], xAttr: ["week"], yAttr: [key]}, 0, {"fill": color});
+    if(!listData.every((d) => d[key] === undefined)) {
+        let line = addLine(linePlot, {dataList: [listData], xAttr: ["week"], yAttr: [key]}, 0, {"stroke": color});
+        let scatter = addScatter(linePlot, {dataList: [listData], xAttr: ["week"], yAttr: [key]}, 0, {"fill": color});
+
+        addHover("#tooltip", scatter, (tooltip, d) => {
+            tooltip.html("<span>Value: " + (Math.round(d[key] * 10) / 10) + "%</span>");
+        })
+    }
+    else {
+        // No data for this case, hide the lines...
+        let [x1, x2] = linePlot.xProj.range();
+        let [y1, y2] = linePlot.yProj.range();
+
+        linePlot.plotArea.append("text")
+            .attr("x", (x1 + x2) / 2)
+            .attr("y", (y1 + y2) / 2)
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .attr("font-size", "20px")
+            .text("No Data for this Variant");
+    }
+
+
 }
 
 async function updateAreaPlot(selector, data, title="COVID-19 Variants over Time (Worldwide)", colorMap = null) {
@@ -231,6 +252,11 @@ async function updateAreaPlot(selector, data, title="COVID-19 Variants over Time
         }
     );
 
+    areas.on("click", (evt, d) => {
+        SELECTED_VARIANT.name = d.key;
+        SELECTED_VARIANT.triggerUpdate();
+    });
+
     return areaPlot;
 }
 
@@ -238,6 +264,11 @@ let SELECTED_COUNTRY = {
     name: null,
     item: null
 };
+
+let SELECTED_VARIANT = {
+    name: "Other",
+    triggerUpdate: () => {}
+}
 
 async function updateWorldPlot(worldPlot, data, world, sliderIndex = 0) {
     d3.select("#figure1date").text("Date: " + PRINT_TIME(data.totals.week[sliderIndex]));
@@ -255,11 +286,22 @@ async function updateWorldPlot(worldPlot, data, world, sliderIndex = 0) {
 
     let colorMap = buildMapper(covidVariants.map((v) => {return {"strain": v}}), "strain", COLOR_LIST, categoryDomain);
 
+    let selectoRects = {};
+
     addLegend(worldPlot, {
         legendNames: covidVariants,
         legendColors: colorMap.colorList,
         legendLocation: "outside_center_right",
-        legendTextSize: 11
+        legendTextSize: 11,
+        onEnter: (evt) => d3.select(evt.target).attr("stroke", "red"),
+        onExit: (evt, name) => {
+            if(SELECTED_VARIANT.name !== name) d3.select(evt.target).attr("stroke", "black")
+        },
+        onClick: (evt, name) => {
+            SELECTED_VARIANT.name = name;
+            SELECTED_VARIANT.triggerUpdate();
+        },
+        onAddRect: (r, name) => (selectoRects[name] = r)
     });
 
     addHover(
@@ -323,11 +365,34 @@ async function updateWorldPlot(worldPlot, data, world, sliderIndex = 0) {
             "COVID-19 Variants over Time (" + ((SELECTED_COUNTRY.name == null)? "Worldwide": SELECTED_COUNTRY.name) + ")",
             colorMap
         );
+        SELECTED_VARIANT.triggerUpdate();
     });
 
-    updateAreaPlot("#figure2", data.totals);
-    updateLinePlot("#figure3", data.totals, "Other", "TEST", colorMap("Other"))
+    SELECTED_VARIANT.triggerUpdate = function() {
+        let title = this.name + " Variant Prevalence " + ((SELECTED_COUNTRY.name != null)? SELECTED_COUNTRY.name: "Worldwide")
+        updateLinePlot(
+            "#figure3",
+            (SELECTED_COUNTRY.name == null)? data.totals: data.countries[SELECTED_COUNTRY.name],
+            this.name,
+            title,
+            colorMap(this.name)
+        );
+        Object.values(selectoRects).forEach((r) => r.attr("stroke-width", "1px").attr("stroke", "black"));
+        selectoRects[this.name].attr("stroke-width", "2px").attr("stroke", "red");
+    }
+
+    updateAreaPlot(
+        "#figure2",
+        (SELECTED_COUNTRY.name == null)? data.totals: data.countries[SELECTED_COUNTRY.name],
+        "COVID-19 Variants over Time\n(" + ((SELECTED_COUNTRY.name == null)? "Worldwide": SELECTED_COUNTRY.name) + ")",
+        colorMap
+    );
+    SELECTED_VARIANT.triggerUpdate();
 }
+
+let PLAYING = false
+let SPEED = 300;
+let TIMEOUT = null;
 
 async function makePlots() {
     let [data, world] = await Promise.all([getFrequencies(), d3.json("data/world.json")]);
@@ -340,6 +405,37 @@ async function makePlots() {
         .attr("value", data.totals.week.length - 1);
 
     dateSlider.on("input", (evt) => updateWorldPlot(worldPlot, data, world, evt.target.value));
+
+    function doUpdate() {
+        if(PLAYING) {
+            let newVal = (+dateSlider.property("value") + 1) % (+dateSlider.attr("max") + 1);
+            dateSlider.property("value", newVal);
+            if(newVal <= +dateSlider.attr("max")) updateWorldPlot(worldPlot, data, world, newVal);
+
+            if(newVal >= dateSlider.attr("max")) {
+                PLAYING = false;
+                playPauseButton.text("▶");
+            }
+            else {
+                TIMEOUT = setTimeout(doUpdate, SPEED);
+            }
+        }
+    }
+
+    let playPauseButton = d3.select("#playbutton");
+    playPauseButton.on("click", (evt) => {
+        let btn = d3.select(evt.target)
+        let wasPlaying = btn.text() === "⏸";
+        PLAYING = !wasPlaying;
+        btn.text((PLAYING)? "⏸": "▶");
+
+        if(PLAYING) {
+            setTimeout(doUpdate, SPEED);
+        }
+        else {
+            clearTimeout(TIMEOUT);
+        }
+    });
 
     let worldPlot = geoPlot(
         "#figure1", world, [0, 30], 104, "Most Common COVID-19 Variant by Region",
