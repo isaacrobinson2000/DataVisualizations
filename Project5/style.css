@@ -34,10 +34,11 @@ body {
 }
 
 .description {
-    padding: 2em;
+    padding: 0.5em;
     flex-basis: 24%;
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 15em;
 }
 
 .figureArea {
@@ -129,4 +130,8 @@ button:active {
     text-align: center;
     font-size: medium;
     font-style: italic;
+}
+
+.covid-image {
+    width: 100%;
 }
