@@ -11,3 +11,6 @@
 
 ### Project 4: Graph Visual
  - [Is Strassen Matrix Multiplication Slower on 'Small' Matrices?](Project4/index.html)
+
+### Project 5: Data Dashboard
+ - [Is Delta Still the most Prevalent COVID-19 Variant?](Project5/index.html)
