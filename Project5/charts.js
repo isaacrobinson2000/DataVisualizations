@@ -1,35 +1,62 @@
 "use strict";
 
 const TO_TIME = d3.timeParse("%Y-%m-%d");
-const PRINT_TIME = d3.timeFormat("%B %d, %Y")
+const PRINT_TIME = d3.timeFormat("%B %d, %Y");
 
-const COLOR_LIST = [
-    "#1f77b4",
-    "#aec7e8",
-    "#ff7f0e",
-    "#48ce8b",
-    "#2ca02c",
-    "#98df8a",
-    "#d62728",
-    "#ff9896",
-    "#9467bd",
-    "#c5b0d5",
-    "#8c564b",
-    "#c49c94",
-    "#e377c2",
-    "#f7b6d2",
-    "#a55194",
-    "#ffbb78",
-    "#bcbd22",
-    "#dbdb8d",
-    "#17becf",
-    "#9edae5",
-    "#6b6ecf",
-    "#b5cf6b",
-    "#e7ba52",
-    "#d6616b",
-    "#7f7f7f"
-];
+function getColorList(covidLabels) {
+    let colors = [];
+
+    for(let label of covidLabels) {
+        let l = label.split("(");
+        if(l.length >= 2) {
+            l = "(" + l[1].split(")")[0] + ") " + l[0]
+        }
+        else {
+            l = label;
+        }
+
+        colors.push(stringToColor(l));
+    }
+
+    return colors;
+}
+
+
+function stringToColor(s, heavyChars = 6) {
+    let validChars = 69;
+    let hash = 0;
+    let revHash = 0;
+    let multiplier = 360 * (2 ** heavyChars);
+    let stepDivisor = 2;
+    let range = 360;
+
+    let m = multiplier / (validChars - 1);
+
+    for(let i = 0; i < s.length; i++) {
+        hash = (hash + charToNumber(s.charAt(i)) * m) % range;
+        revHash = (revHash + charToNumber(s.charAt(s.length - (1 + i))) * m) % range;
+        m /= stepDivisor;
+    }
+
+    let sat = 60 + (revHash % 30);
+    let light = 30 + ((revHash * 30) % 50);
+
+    return "hsl(" + hash + ", " + sat + "%, " + light + "%)";
+}
+
+
+function charToNumber(char) {
+    if("0" <= char && char <= "9") {
+        return (char.charCodeAt(0) - "0".charCodeAt(0)) + 1;
+    }
+    else if("A" <= char && char <= "z") {
+        return (char.charCodeAt(0) - "A".charCodeAt(0)) + 11;
+    }
+    else {
+        return 0;
+    }
+}
+
 
 async function getFrequencies() {
     let data = await d3.json("https://raw.githubusercontent.com/hodcroftlab/covariants/master/cluster_tables/EUClusters_data.json");
@@ -168,7 +195,7 @@ async function updateAreaPlot(selector, data, title="COVID-19 Variants over Time
 
     if(colorMap == null) {
         colorMap = buildMapper(
-            covidVariants.map((v) => {return {"strain": v}}), "strain", COLOR_LIST, categoryDomain
+            covidVariants.map((v) => {return {"strain": v}}), "strain", getColorList(covidVariants), categoryDomain
         );
     }
 
@@ -284,13 +311,22 @@ async function updateWorldPlot(worldPlot, data, world, sliderIndex = 0) {
         .attr("step", 1)
         .attr("value", sliderIndex);
 
-    let colorMap = buildMapper(covidVariants.map((v) => {return {"strain": v}}), "strain", COLOR_LIST, categoryDomain);
+    let colorMap = buildMapper(
+        covidVariants.map((v) => {return {"strain": v}}),
+        "strain",
+        getColorList(covidVariants),
+        categoryDomain
+    );
 
     let selectoRects = {};
 
+    // Filter variants to only those with counts for the week...
+    let visibleColors = colorMap.colorList.filter((v, i) => data.totals[covidVariants[i]][sliderIndex] != 0);
+    let visibleVariants = covidVariants.filter((v) => data.totals[v][sliderIndex] != 0);
+
     addLegend(worldPlot, {
-        legendNames: covidVariants,
-        legendColors: colorMap.colorList,
+        legendNames: visibleVariants,
+        legendColors: visibleColors,
         legendLocation: "outside_center_right",
         legendTextSize: 11,
         onEnter: (evt) => d3.select(evt.target).attr("stroke", "red"),
