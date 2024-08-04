@@ -170,6 +170,19 @@ async function updateLinePlot(selector, data, key, title, color) {
         addHover("#tooltip", scatter, (tooltip, d) => {
             tooltip.html("<span>Value: " + (Math.round(d[key] * 10) / 10) + "%</span>");
         })
+
+        scatter.on("click", (evt) => {
+            let [x, y] = d3.pointer(evt);
+
+            let exactTime = linePlot.xProj.invert(x);
+            let idx = getSubIndex(data, null, linePlot.xProj.invert(x), 1);
+            let [diff1, diff2] = [data.week[idx] - exactTime, exactTime - data.week[idx - 1]];
+            idx = (diff1 < diff2)? idx: idx - 1;
+
+            let dateSlider = d3.select("#figure1control");
+            dateSlider.property("value", idx);
+            dateSlider.dispatch("input");
+        });
     }
     else {
         // No data for this case, hide the lines...
@@ -280,6 +293,17 @@ async function updateAreaPlot(selector, data, title="COVID-19 Variants over Time
     );
 
     areas.on("click", (evt, d) => {
+        let [x, y] = d3.pointer(evt);
+
+        let exactTime = areaPlot.xProj.invert(x);
+        let idx = getSubIndex(data, null, areaPlot.xProj.invert(x), 1);
+        let [diff1, diff2] = [data.week[idx] - exactTime, exactTime - data.week[idx - 1]];
+        idx = (diff1 < diff2)? idx: idx - 1;
+
+        let dateSlider = d3.select("#figure1control");
+        dateSlider.property("value", idx);
+        dateSlider.dispatch("input");
+
         SELECTED_VARIANT.name = d.key;
         SELECTED_VARIANT.triggerUpdate();
     });
@@ -414,7 +438,9 @@ async function updateWorldPlot(worldPlot, data, world, sliderIndex = 0) {
             colorMap(this.name)
         );
         Object.values(selectoRects).forEach((r) => r.attr("stroke-width", "1px").attr("stroke", "black"));
-        selectoRects[this.name].attr("stroke-width", "2px").attr("stroke", "red");
+        if(selectoRects[this.name] != undefined) {
+            selectoRects[this.name].attr("stroke-width", "2px").attr("stroke", "red");
+        }
     }
 
     updateAreaPlot(
